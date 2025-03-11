@@ -21,7 +21,7 @@ Frost Coin is a chillingly cool cryptocurrency decentralized application (DApp) 
 - Node.js (v16 or later)
 - npm or yarn
 - MetaMask wallet installed and configured with Sepolia test network
-- Sepolia ETH for gas fees (obtain from a faucet like [Sepolia Faucet](https://sepoliafaucet.com/))
+- Sepolia ETH for gas fees
 
 ## Installation
 

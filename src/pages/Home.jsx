@@ -4,7 +4,7 @@ import { parseEther } from 'viem'
 import WalletConnect from '../components/WalletConnect'
 import TokenABI from '../TokenABI.json'
 
-const CONTRACT_ADDRESS = import.meta.env.CONTRACT_ADDRESS
+const CONTRACT_ADDRESS = import.meta.env.VITE_CONTRACT_ADDRESS
 
 function Home() {
   const { address, isConnected } = useAccount()

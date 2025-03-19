@@ -1,5 +1,6 @@
 import { ethers } from "ethers";
 import { useState } from "react";
+import { colors } from "../styles/colors";
 
 interface WalletConnectProps {
   currentAddress: string;
@@ -73,34 +74,77 @@ function WalletConnect({ currentAddress, isConnected, onConnected, onDisconnecte
   };
 
   return (
-    <div className="mb-3">
+    <div className="flex flex-col items-center">
       {isConnected ? (
-        <div className="flex justify-between items-center">
-          <div className="frost-wallet-display">
-            <span className="frost-wallet-address">
-              {currentAddress?.slice(0, 6)}...{currentAddress?.slice(-4)}
-            </span>
+        <div className="w-full flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div className="flex items-center space-x-3">
+            <div
+              style={{
+                width: '2.5rem',
+                height: '2.5rem',
+                borderRadius: '9999px',
+                backgroundColor: colors.frostFrosty,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              <span style={{ color: colors.frostPrimary, fontWeight: 500 }}>
+                W
+              </span>
+            </div>
+            <div>
+              <span style={{ color: colors.frostText }}>Connected:</span>
+              <span
+                style={{
+                  display: 'block',
+                  color: colors.frostPrimary,
+                  fontFamily: 'monospace',
+                }}
+              >
+                {currentAddress?.slice(0, 6)}...{currentAddress?.slice(-4)}
+              </span>
+            </div>
           </div>
-          <button 
+          <button
             onClick={disconnectWallet}
-            className="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-xs"
+            style={{
+              padding: '0.5rem 1rem',
+              borderRadius: '0.5rem',
+              fontWeight: 500,
+              background: `linear-gradient(to right, ${colors.frostPrimary}, ${colors.frostSecondary})`,
+              color: '#FFFFFF',
+              transition: 'background 0.2s ease',
+            }}
+            onMouseEnter={(e) =>
+              (e.currentTarget.style.background = `linear-gradient(to right, rgba(79, 70, 229, 0.9), rgba(167, 139, 250, 0.9))`)
+            }
+            onMouseLeave={(e) =>
+              (e.currentTarget.style.background = `linear-gradient(to right, ${colors.frostPrimary}, ${colors.frostSecondary})`)
+            }
           >
             Disconnect
           </button>
         </div>
       ) : (
-        <div className="text-center">
-          <p className="text-blue-600 mb-2 text-sm">
+        <div className="w-full flex flex-col items-center space-y-4">
+          <p style={{ color: colors.frostText }}>
             Connect your wallet to manage your FROST tokens
           </p>
-          <button 
-            onClick={connectWallet} 
+          <button
+            onClick={connectWallet}
             disabled={isConnecting}
-            className="px-4 py-2 bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-md shadow-md hover:from-blue-600 hover:to-blue-700"
           >
             {isConnecting ? 'Connecting...' : 'Connect Wallet'}
           </button>
-          {connectError && <p className="text-red-500 mt-1 text-xs">{connectError.message}</p>}
+          {connectError && (
+            <div
+              className="w-full frost-status"
+              style={{ backgroundColor: colors.frostError }}
+            >
+              {connectError.message}
+            </div>
+          )}
         </div>
       )}
     </div>

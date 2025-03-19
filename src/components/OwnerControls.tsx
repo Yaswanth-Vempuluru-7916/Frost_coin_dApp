@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ethers } from 'ethers';
 import TokenABI from '../../contracts/TokenABI.json';
 import { isValidAddress } from '../utils/helpers';
+import { colors } from '../styles/colors';
 
 const CONTRACT_ADDRESS: string = import.meta.env.VITE_CONTRACT_ADDRESS;
 
@@ -238,105 +239,136 @@ function OwnerControls() {
     }
   };
   return (
-    <div className="frost-grid">
-    {/* Mint Tokens */}
     <div>
-      <h4 className="text-blue-700">Mint Tokens</h4>
-      <div className="frost-input-group">
-        <label>Recipient Address</label>
-        <input
-          type="text"
-          placeholder="0x..."
-          value={mintAddress}
-          onChange={(e) => setMintAddress(e.target.value)}
-          disabled={isMintPending}
-        />
-      </div>
-      <div className="frost-input-group">
-        <label>Amount</label>
-        <input
-          type="number"
-          placeholder="0.0"
-          value={mintAmount}
-          onChange={(e) => setMintAmount(e.target.value)}
-          disabled={isMintPending}
-        />
-      </div>
-      <button onClick={handleMint} disabled={isMintPending} className="w-full">
-        {isMintPending ? 'Processing...' : 'Mint Tokens'}
-      </button>
-      {mintStatus && (
-        <div className={`frost-status ${
-          mintStatus.includes('Error') ? 'frost-status-error' : 
-          mintStatus.includes('Success') ? 'frost-status-success' : 'frost-status-pending'
-        }`}>
-          {mintStatus}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Mint Tokens */}
+        <div className="space-y-4">
+          <h4>Mint Tokens</h4>
+          <div>
+            <label>Recipient Address</label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={mintAddress}
+              onChange={(e) => setMintAddress(e.target.value)}
+              disabled={isMintPending}
+            />
+          </div>
+          <div>
+            <label>Amount</label>
+            <input
+              type="number"
+              placeholder="0.0"
+              value={mintAmount}
+              onChange={(e) => setMintAmount(e.target.value)}
+              disabled={isMintPending}
+            />
+          </div>
+          <button
+            onClick={handleMint}
+            disabled={isMintPending}
+          >
+            {isMintPending ? 'Processing...' : 'Mint Tokens'}
+          </button>
+          {mintStatus && (
+            <div
+              className="frost-status"
+              style={{
+                backgroundColor: mintStatus.includes('Error')
+                  ? colors.frostError
+                  : mintStatus.includes('successful')
+                  ? colors.frostSuccess
+                  : colors.frostInfo,
+              }}
+            >
+              {mintStatus}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-
-    {/* Burn Tokens */}
-    <div>
-      <h4 className="text-blue-700">Burn Tokens</h4>
-      <div className="frost-input-group">
-        <label>Target Address</label>
-        <input
-          type="text"
-          placeholder="0x..."
-          value={burnAddress}
-          onChange={(e) => setBurnAddress(e.target.value)}
-          disabled={isBurnPending}
-        />
-      </div>
-      <div className="frost-input-group">
-        <label>Amount</label>
-        <input
-          type="number"
-          placeholder="0.0"
-          value={burnAmount}
-          onChange={(e) => setBurnAmount(e.target.value)}
-          disabled={isBurnPending}
-        />
-      </div>
-      <button onClick={handleBurn} disabled={isBurnPending} className="w-full">
-        {isBurnPending ? 'Processing...' : 'Burn Tokens'}
-      </button>
-      {burnStatus && (
-        <div className={`frost-status ${
-          burnStatus.includes('Error') ? 'frost-status-error' : 
-          burnStatus.includes('Success') ? 'frost-status-success' : 'frost-status-pending'
-        }`}>
-          {burnStatus}
+  
+        {/* Burn Tokens */}
+        <div className="space-y-4">
+          <h4>Burn Tokens</h4>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label>Target Address</label>
+              <input
+                type="text"
+                placeholder="0x..."
+                value={burnAddress}
+                onChange={(e) => setBurnAddress(e.target.value)}
+                disabled={isBurnPending}
+              />
+            </div>
+            <div>
+              <label>Amount</label>
+              <input
+                type="number"
+                placeholder="0.0"
+                value={burnAmount}
+                onChange={(e) => setBurnAmount(e.target.value)}
+                disabled={isBurnPending}
+              />
+            </div>
+          </div>
+          <button
+            onClick={handleBurn}
+            disabled={isBurnPending}
+          >
+            {isBurnPending ? 'Processing...' : 'Burn Tokens'}
+          </button>
+          {burnStatus && (
+            <div
+              className="frost-status"
+              style={{
+                backgroundColor: burnStatus.includes('Error')
+                  ? colors.frostError
+                  : burnStatus.includes('successful')
+                  ? colors.frostSuccess
+                  : colors.frostInfo,
+              }}
+            >
+              {burnStatus}
+            </div>
+          )}
         </div>
-      )}
-    </div>
-
-    {/* Transfer Ownership */}
-    <div>
-      <h4 className="text-blue-700">Transfer Ownership</h4>
-      <div className="frost-input-group">
-        <label>New Owner Address</label>
-        <input
-          type="text"
-          placeholder="0x..."
-          value={newOwnerAddress}
-          onChange={(e) => setNewOwnerAddress(e.target.value)}
-          disabled={isTransferOwnershipPending}
-        />
-      </div>
-      <button onClick={handleTransferOwnership} disabled={isTransferOwnershipPending} className="w-full">
-        {isTransferOwnershipPending ? 'Processing...' : 'Transfer Ownership'}
-      </button>
-      {transferOwnershipStatus && (
-        <div className={`frost-status ${
-          transferOwnershipStatus.includes('Error') ? 'frost-status-error' : 
-          transferOwnershipStatus.includes('Success') ? 'frost-status-success' : 'frost-status-pending'
-        }`}>
-          {transferOwnershipStatus}
+  
+        {/* Transfer Ownership */}
+        <div className="space-y-4 lg:col-span-2">
+          <h4>Transfer Ownership</h4>
+          <div>
+            <label>New Owner Address</label>
+            <input
+              type="text"
+              placeholder="0x..."
+              value={newOwnerAddress}
+              onChange={(e) => setNewOwnerAddress(e.target.value)}
+              disabled={isTransferOwnershipPending}
+            />
+          </div>
+          <button
+            onClick={handleTransferOwnership}
+            disabled={isTransferOwnershipPending}
+          >
+            {isTransferOwnershipPending ? 'Processing...' : 'Transfer Ownership'}
+          </button>
+          {transferOwnershipStatus && (
+            <div
+              className="frost-status"
+              style={{
+                backgroundColor: transferOwnershipStatus.includes('Error')
+                  ? colors.frostError
+                  : transferOwnershipStatus.includes('successful')
+                  ? colors.frostSuccess
+                  : colors.frostInfo,
+              }}
+            >
+              {transferOwnershipStatus}
+            </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
-  </div>
   );
 
 }

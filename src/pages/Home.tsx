@@ -4,6 +4,7 @@ import WalletConnect from '../components/WalletConnect';
 import OwnerControls from '../components/OwnerControls';
 import TokenABI from '../../contracts/TokenABI.json';
 import { formatBalance, isValidAddress } from '../utils/helpers';
+import { colors } from '../styles/colors';
 
 const CONTRACT_ADDRESS: string = import.meta.env.VITE_CONTRACT_ADDRESS;
 
@@ -501,254 +502,334 @@ function Home() {
   };
 
   return (
-    <div className="frost-container">
-      <div className="text-center mb-4">
-        <h1 className="text-3xl font-bold text-blue-700">Frost Coin</h1>
-        <p className="text-blue-600 text-sm">A chillingly cool cryptocurrency</p>
-      </div>
-
-      <div className="frost-stats">
-        <div className="frost-stat-item">
-          <span className="frost-stat-label">Total Supply</span>
-          <span className="frost-stat-value">
-            {totalSupplyLoading ? 'Loading...' : formatBalance(totalSupply)} FROST
-          </span>
+    <div
+      className="min-h-screen flex flex-col"
+      style={{
+        background: `linear-gradient(to bottom, ${colors.frostFrosty}, ${colors.frostTertiary})`,
+      }}
+    >
+      {/* Header */}
+      <header className="text-center py-6 sm:py-8">
+        <h1 className="text-4xl sm:text-5xl font-bold mb-2">Frost Coin</h1>
+        <p style={{ color: colors.frostText, fontSize: '1.125rem' }}>
+          A chillingly cool cryptocurrency
+        </p>
+      </header>
+  
+      {/* Main Content */}
+      <main className="flex-grow frost-container">
+        {/* Token Info and Wallet Connect - Side by Side on Medium Screens */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Token Information */}
+          <div className="frost-card">
+            <h3>Token Information</h3>
+            <div className="space-y-2">
+              <div className="flex justify-between items-center">
+                <span style={{ color: colors.frostText }}>Total Supply:</span>
+                <span style={{ color: colors.frostPrimary, fontWeight: 500 }}>
+                  {totalSupplyLoading ? 'Loading...' : formatBalance(totalSupply)} FROST
+                </span>
+              </div>
+              <div className="flex justify-between items-center">
+                <span style={{ color: colors.frostText }}>Cap:</span>
+                <span style={{ color: colors.frostPrimary, fontWeight: 500 }}>
+                  {capLoading ? 'Loading...' : formatBalance(cap)} FROST
+                </span>
+              </div>
+            </div>
+          </div>
+  
+          {/* Wallet Connect */}
+          <div className="frost-card">
+            <WalletConnect 
+              currentAddress={address}
+              isConnected={isConnected}
+              onConnected={onConnected}
+              onDisconnected={onDisconnected}
+            />
+          </div>
         </div>
-        <div className="frost-stat-item">
-          <span className="frost-stat-label">Cap</span>
-          <span className="frost-stat-value">
-            {capLoading ? 'Loading...' : formatBalance(cap)} FROST
-          </span>
-        </div>
-      </div>
-
-      <div className="frost-card">
-        <WalletConnect
-          currentAddress={address}
-          isConnected={isConnected}
-          onConnected={onConnected}
-          onDisconnected={onDisconnected}
-        />
-        
+  
+        {/* Connected Wallet Actions */}
         {isConnected ? (
-          <div className="mt-3">
-            <div className="frost-panel mb-4">
-              <div className="flex items-center justify-between">
-                <span className="text-sm text-blue-600 font-medium">Your Balance</span>
-                <span className="text-base font-bold text-blue-800">
+          <div>
+            {/* Balance */}
+            <div
+              className="frost-card"
+              style={{ backgroundColor: colors.frostSnow }}
+            >
+              <div className="flex justify-between items-center">
+                <span style={{ fontSize: '1.125rem', fontWeight: 500, color: colors.frostText }}>
+                  Your Balance:
+                </span>
+                <span style={{ fontSize: '1.125rem', color: colors.frostPrimary, fontWeight: 500 }}>
                   {balanceLoading ? 'Loading...' : formatBalance(balance)} FROST
                 </span>
               </div>
             </div>
-
-            {/* All functional sections using grid layout */}
-            <div className="frost-grid">
-              {/* Transfer Tokens */}
-              <div className="frost-panel">
-                <h3>Transfer Tokens</h3>
-                <div className="frost-input-group">
-                  <label>Recipient Address</label>
-                  <input
-                    type="text"
-                    placeholder="0x..."
-                    value={transferTo}
-                    onChange={(e) => setTransferTo(e.target.value)}
+  
+            {/* User Actions */}
+            <div className="frost-card">
+              <h3>Manage Tokens</h3>
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Transfer Tokens */}
+                <div className="space-y-4">
+                  <h4>Transfer Tokens</h4>
+                  <div>
+                    <label>Recipient Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x..."
+                      value={transferTo}
+                      onChange={(e) => setTransferTo(e.target.value)}
+                      disabled={isTransferPending}
+                    />
+                  </div>
+                  <div>
+                    <label>Amount</label>
+                    <input
+                      type="number"
+                      placeholder="0.0"
+                      value={amount}
+                      onChange={(e) => setAmount(e.target.value)}
+                      disabled={isTransferPending}
+                    />
+                  </div>
+                  <button
+                    onClick={handleTransfer}
                     disabled={isTransferPending}
-                  />
+                  >
+                    {isTransferPending ? 'Processing...' : 'Send Tokens'}
+                  </button>
+                  {transferStatus && (
+                    <div
+                      className="frost-status"
+                      style={{
+                        backgroundColor: transferStatus.includes('Error')
+                          ? colors.frostError
+                          : transferStatus.includes('successful')
+                          ? colors.frostSuccess
+                          : colors.frostInfo,
+                      }}
+                    >
+                      {transferStatus}
+                    </div>
+                  )}
                 </div>
-                <div className="frost-input-group">
-                  <label>Amount</label>
-                  <input
-                    type="number"
-                    placeholder="0.0"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    disabled={isTransferPending}
-                  />
-                </div>
-                <button
-                  onClick={handleTransfer}
-                  disabled={isTransferPending}
-                  className="w-full"
-                >
-                  {isTransferPending ? 'Processing...' : 'Send Tokens'}
-                </button>
-                {transferStatus && (
-                  <div className={`frost-status ${
-                    transferStatus.includes('Error') ? 'frost-status-error' : 
-                    transferStatus.includes('Success') ? 'frost-status-success' : 'frost-status-pending'
-                  }`}>
-                    {transferStatus}
+  
+                {/* Approve Spender */}
+                <div className="space-y-4">
+                  <h4>Approve Spender</h4>
+                  <div>
+                    <label>Spender Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x..."
+                      value={approveSpender}
+                      onChange={(e) => setApproveSpender(e.target.value)}
+                      disabled={isApprovePending}
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* Approve */}
-              <div className="frost-panel">
-                <h3>Approve Spender</h3>
-                <div className="frost-input-group">
-                  <label>Spender Address</label>
-                  <input
-                    type="text"
-                    placeholder="0x..."
-                    value={approveSpender}
-                    onChange={(e) => setApproveSpender(e.target.value)}
+                  <div>
+                    <label>Amount</label>
+                    <input
+                      type="number"
+                      placeholder="0.0"
+                      value={approveAmount}
+                      onChange={(e) => setApproveAmount(e.target.value)}
+                      disabled={isApprovePending}
+                    />
+                  </div>
+                  <button
+                    onClick={handleApprove}
                     disabled={isApprovePending}
-                  />
+                  >
+                    {isApprovePending ? 'Processing...' : 'Approve'}
+                  </button>
+                  {approveStatus && (
+                    <div
+                      className="frost-status"
+                      style={{
+                        backgroundColor: approveStatus.includes('Error')
+                          ? colors.frostError
+                          : approveStatus.includes('successful')
+                          ? colors.frostSuccess
+                          : colors.frostInfo,
+                      }}
+                    >
+                      {approveStatus}
+                    </div>
+                  )}
                 </div>
-                <div className="frost-input-group">
-                  <label>Amount</label>
-                  <input
-                    type="number"
-                    placeholder="0.0"
-                    value={approveAmount}
-                    onChange={(e) => setApproveAmount(e.target.value)}
-                    disabled={isApprovePending}
-                  />
-                </div>
-                <button onClick={handleApprove} disabled={isApprovePending} className="w-full">
-                  {isApprovePending ? 'Processing...' : 'Approve'}
-                </button>
-                {approveStatus && (
-                  <div className={`frost-status ${
-                    approveStatus.includes('Error') ? 'frost-status-error' : 
-                    approveStatus.includes('Success') ? 'frost-status-success' : 'frost-status-pending'
-                  }`}>
-                    {approveStatus}
+  
+                {/* Increase Allowance */}
+                <div className="space-y-4">
+                  <h4>Increase Allowance</h4>
+                  <div>
+                    <label>Spender Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x..."
+                      value={increaseSpender}
+                      onChange={(e) => setIncreaseSpender(e.target.value)}
+                      disabled={isIncreasePending}
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* Increase Allowance */}
-              <div className="frost-panel">
-                <h3>Increase Allowance</h3>
-                <div className="frost-input-group">
-                  <label>Spender Address</label>
-                  <input
-                    type="text"
-                    placeholder="0x..."
-                    value={increaseSpender}
-                    onChange={(e) => setIncreaseSpender(e.target.value)}
+                  <div>
+                    <label>Amount to Increase</label>
+                    <input
+                      type="number"
+                      placeholder="0.0"
+                      value={increaseAmount}
+                      onChange={(e) => setIncreaseAmount(e.target.value)}
+                      disabled={isIncreasePending}
+                    />
+                  </div>
+                  <button
+                    onClick={handleIncreaseAllowance}
                     disabled={isIncreasePending}
-                  />
+                  >
+                    {isIncreasePending ? 'Processing...' : 'Increase Allowance'}
+                  </button>
+                  {increaseStatus && (
+                    <div
+                      className="frost-status"
+                      style={{
+                        backgroundColor: increaseStatus.includes('Error')
+                          ? colors.frostError
+                          : increaseStatus.includes('successful')
+                          ? colors.frostSuccess
+                          : colors.frostInfo,
+                      }}
+                    >
+                      {increaseStatus}
+                    </div>
+                  )}
                 </div>
-                <div className="frost-input-group">
-                  <label>Amount to Increase</label>
-                  <input
-                    type="number"
-                    placeholder="0.0"
-                    value={increaseAmount}
-                    onChange={(e) => setIncreaseAmount(e.target.value)}
-                    disabled={isIncreasePending}
-                  />
-                </div>
-                <button onClick={handleIncreaseAllowance} disabled={isIncreasePending} className="w-full">
-                  {isIncreasePending ? 'Processing...' : 'Increase Allowance'}
-                </button>
-                {increaseStatus && (
-                  <div className={`frost-status ${
-                    increaseStatus.includes('Error') ? 'frost-status-error' : 
-                    increaseStatus.includes('Success') ? 'frost-status-success' : 'frost-status-pending'
-                  }`}>
-                    {increaseStatus}
+  
+                {/* Decrease Allowance */}
+                <div className="space-y-4">
+                  <h4>Decrease Allowance</h4>
+                  <div>
+                    <label>Spender Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x..."
+                      value={decreaseSpender}
+                      onChange={(e) => setDecreaseSpender(e.target.value)}
+                      disabled={isDecreasePending}
+                    />
                   </div>
-                )}
-              </div>
-
-              {/* Decrease Allowance */}
-              <div className="frost-panel">
-                <h3>Decrease Allowance</h3>
-                <div className="frost-input-group">
-                  <label>Spender Address</label>
-                  <input
-                    type="text"
-                    placeholder="0x..."
-                    value={decreaseSpender}
-                    onChange={(e) => setDecreaseSpender(e.target.value)}
+                  <div>
+                    <label>Amount to Decrease</label>
+                    <input
+                      type="number"
+                      placeholder="0.0"
+                      value={decreaseAmount}
+                      onChange={(e) => setDecreaseAmount(e.target.value)}
+                      disabled={isDecreasePending}
+                    />
+                  </div>
+                  <button
+                    onClick={handleDecreaseAllowance}
                     disabled={isDecreasePending}
-                  />
+                  >
+                    {isDecreasePending ? 'Processing...' : 'Decrease Allowance'}
+                  </button>
+                  {decreaseStatus && (
+                    <div
+                      className="frost-status"
+                      style={{
+                        backgroundColor: decreaseStatus.includes('Error')
+                          ? colors.frostError
+                          : decreaseStatus.includes('successful')
+                          ? colors.frostSuccess
+                          : colors.frostInfo,
+                      }}
+                    >
+                      {decreaseStatus}
+                    </div>
+                  )}
                 </div>
-                <div className="frost-input-group">
-                  <label>Amount to Decrease</label>
-                  <input
-                    type="number"
-                    placeholder="0.0"
-                    value={decreaseAmount}
-                    onChange={(e) => setDecreaseAmount(e.target.value)}
-                    disabled={isDecreasePending}
-                  />
-                </div>
-                <button onClick={handleDecreaseAllowance} disabled={isDecreasePending} className="w-full">
-                  {isDecreasePending ? 'Processing...' : 'Decrease Allowance'}
-                </button>
-                {decreaseStatus && (
-                  <div className={`frost-status ${
-                    decreaseStatus.includes('Error') ? 'frost-status-error' : 
-                    decreaseStatus.includes('Success') ? 'frost-status-success' : 'frost-status-pending'
-                  }`}>
-                    {decreaseStatus}
+  
+                {/* Burn From */}
+                <div className="space-y-4 lg:col-span-2">
+                  <h4>Burn From</h4>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <label>Target Address</label>
+                      <input
+                        type="text"
+                        placeholder="0x..."
+                        value={burnFromAddress}
+                        onChange={(e) => setBurnFromAddress(e.target.value)}
+                        disabled={isBurnFromPending}
+                      />
+                    </div>
+                    <div>
+                      <label>Amount</label>
+                      <input
+                        type="number"
+                        placeholder="0.0"
+                        value={burnFromAmount}
+                        onChange={(e) => setBurnFromAmount(e.target.value)}
+                        disabled={isBurnFromPending}
+                      />
+                    </div>
                   </div>
-                )}
-              </div>
-
-              {/* Burn From */}
-              <div className="frost-panel">
-                <h3>Burn From</h3>
-                <div className="frost-input-group">
-                  <label>Target Address</label>
-                  <input
-                    type="text"
-                    placeholder="0x..."
-                    value={burnFromAddress}
-                    onChange={(e) => setBurnFromAddress(e.target.value)}
+                  <button
+                    onClick={handleBurnFrom}
                     disabled={isBurnFromPending}
-                  />
+                  >
+                    {isBurnFromPending ? 'Processing...' : 'Burn From'}
+                  </button>
+                  {burnFromStatus && (
+                    <div
+                      className="frost-status"
+                      style={{
+                        backgroundColor: burnFromStatus.includes('Error')
+                          ? colors.frostError
+                          : burnFromStatus.includes('successful')
+                          ? colors.frostSuccess
+                          : colors.frostInfo,
+                      }}
+                    >
+                      {burnFromStatus}
+                    </div>
+                  )}
                 </div>
-                <div className="frost-input-group">
-                  <label>Amount</label>
-                  <input
-                    type="number"
-                    placeholder="0.0"
-                    value={burnFromAmount}
-                    onChange={(e) => setBurnFromAmount(e.target.value)}
-                    disabled={isBurnFromPending}
-                  />
-                </div>
-                <button onClick={handleBurnFrom} disabled={isBurnFromPending} className="w-full">
-                  {isBurnFromPending ? 'Processing...' : 'Burn From'}
-                </button>
-                {burnFromStatus && (
-                  <div className={`frost-status ${
-                    burnFromStatus.includes('Error') ? 'frost-status-error' : 
-                    burnFromStatus.includes('Success') ? 'frost-status-success' : 'frost-status-pending'
-                  }`}>
-                    {burnFromStatus}
-                  </div>
-                )}
               </div>
             </div>
-
-            {/* Owner Controls - Full width */}
+  
+            {/* Owner Controls */}
             {isOwner && (
-              <div className="frost-panel border-blue-300 bg-blue-100/80 mt-3">
-                <h3 className="text-blue-800">Owner Controls</h3>
+              <div
+                className="frost-card"
+                style={{ borderColor: colors.frostWarm }}
+              >
+                <h3>Owner Controls</h3>
                 <OwnerControls />
               </div>
             )}
           </div>
         ) : (
-          <div className="text-center py-4">
-            <p className="text-blue-600 mb-2">Please connect your wallet to access your tokens</p>
-            <div className="animate-pulse text-blue-400 text-4xl mb-2">❄</div>
+          <div className="frost-card text-center">
+            <p style={{ color: colors.frostText }}>
+              Please connect your wallet to access your tokens
+            </p>
           </div>
         )}
-      </div>
-
-      <footer className="frost-footer">
-        <p>Frost Coin - Cool your crypto portfolio</p>
+      </main>
+  
+      {/* Footer */}
+      <footer className="text-center py-4">
+        <p style={{ color: colors.frostText }}>
+          Frost Coin - Cool your crypto portfolio
+        </p>
       </footer>
     </div>
   );
+
 }
 
 export default Home;

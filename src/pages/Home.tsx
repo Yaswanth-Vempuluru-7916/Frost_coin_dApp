@@ -47,6 +47,12 @@ function Home() {
   const [burnFromStatus, setBurnFromStatus] = useState<string>('');
   const [isBurnFromPending, setIsBurnFromPending] = useState<boolean>(false);
 
+  // Add to existing state declarations
+  const [transferFromFrom, setTransferFromFrom] = useState<string>('');
+  const [transferFromTo, setTransferFromTo] = useState<string>('');
+  const [transferFromAmount, setTransferFromAmount] = useState<string>('');
+  const [transferFromStatus, setTransferFromStatus] = useState<string>('');
+  const [isTransferFromPending, setIsTransferFromPending] = useState<boolean>(false);
   // Setup listeners for wallet connection changes
   useEffect(() => {
     const handleAccountsChanged = (accounts: string[]) => {
@@ -86,17 +92,17 @@ function Home() {
 
       const provider = new ethers.BrowserProvider(window.ethereum);
       const tokenContract = new ethers.Contract(CONTRACT_ADDRESS, TokenABI, provider);
-      
+
       setTotalSupplyLoading(true);
       const supplyResult = await tokenContract.totalSupply();
       setTotalSupply(supplyResult);
       setTotalSupplyLoading(false);
-      
+
       setCapLoading(true);
       const capResult = await tokenContract.cap();
       setCap(capResult);
       setCapLoading(false);
-      
+
       if (userAddress) {
         setBalanceLoading(true);
         const balanceResult = await tokenContract.balanceOf(userAddress);
@@ -151,7 +157,7 @@ function Home() {
 
       setTransferStatus('Awaiting confirmation...');
       setIsTransferPending(true);
-      
+
       if (!window.ethereum) {
         throw new Error("No Ethereum wallet detected");
       }
@@ -159,9 +165,9 @@ function Home() {
       const provider = new ethers.BrowserProvider(window.ethereum);
       const signer = await provider.getSigner();
       const tokenContract = new ethers.Contract(CONTRACT_ADDRESS, TokenABI, signer);
-      
+
       const amountInWei = ethers.parseEther(amount.toString());
-      
+
       try {
         await tokenContract.transfer.estimateGas(transferTo, amountInWei);
       } catch (error: any) {
@@ -175,12 +181,12 @@ function Home() {
         }
         throw new Error(errorMessage);
       }
-      
+
       const tx = await tokenContract.transfer(transferTo, amountInWei);
       setTransferStatus('Processing transaction...');
-      
+
       const receipt = await tx.wait();
-      
+
       if (receipt.status === 1) {
         setTransferStatus('Transfer successful!');
         setTransferTo('');
@@ -488,6 +494,90 @@ function Home() {
     }
   };
 
+  const handleTransferFrom = async () => {
+    try {
+      if (!transferFromFrom || !transferFromTo || !transferFromAmount) {
+        setTransferFromStatus('Please fill in all fields');
+        return;
+      }
+
+      if (!isValidAddress(transferFromFrom) || !isValidAddress(transferFromTo)) {
+        setTransferFromStatus('Invalid address');
+        return;
+      }
+
+      if (parseFloat(transferFromAmount) <= 0) {
+        setTransferFromStatus('Amount must be greater than zero');
+        return;
+      }
+
+      setTransferFromStatus('Awaiting confirmation...');
+      setIsTransferFromPending(true);
+
+      if (!window.ethereum) {
+        throw new Error('No Ethereum wallet detected');
+      }
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await provider.getSigner();
+      const tokenContract = new ethers.Contract(CONTRACT_ADDRESS, TokenABI, signer);
+
+      const amountInWei = ethers.parseEther(transferFromAmount.toString());
+
+      try {
+        await tokenContract.transferFrom.estimateGas(transferFromFrom, transferFromTo, amountInWei);
+      } catch (error: any) {
+        let errorMessage = 'Transaction will fail';
+        if (error.message?.includes('insufficient funds')) {
+          errorMessage = 'Insufficient funds for gas';
+        } else if (error.message?.includes('insufficient allowance')) {
+          errorMessage = 'Insufficient allowance';
+        } else if (error.message?.includes('transfer amount exceeds balance')) {
+          errorMessage = 'Owner has insufficient FROST balance';
+        } else if (error.message?.includes('self-transfer not allowed')) {
+          errorMessage = 'Cannot transfer to the same address';
+        }
+        throw new Error(errorMessage);
+      }
+
+      const tx = await tokenContract.transferFrom(transferFromFrom, transferFromTo, amountInWei);
+      setTransferFromStatus('Processing transaction...');
+
+      const receipt = await tx.wait();
+
+      if (receipt.status === 1) {
+        setTransferFromStatus('Transfer successful!');
+        setTransferFromFrom('');
+        setTransferFromTo('');
+        setTransferFromAmount('');
+        refreshBalance(); // Refresh balance if the spender is also the owner or recipient
+        setTimeout(() => setTransferFromStatus(''), 3000);
+      } else {
+        setTransferFromStatus('Error: Transaction failed');
+      }
+    } catch (err: any) {
+      console.error('TransferFrom error:', err);
+      let errorMessage = 'Transaction failed';
+      if (err.message?.includes('insufficient funds')) {
+        errorMessage = 'Insufficient funds for gas';
+      } else if (err.message?.includes('user rejected')) {
+        errorMessage = 'Transaction rejected in wallet';
+      } else if (err.message?.includes('insufficient allowance')) {
+        errorMessage = 'Insufficient allowance';
+      } else if (err.message?.includes('transfer amount exceeds balance')) {
+        errorMessage = 'Owner has insufficient FROST balance';
+      } else if (err.message?.includes('self-transfer not allowed')) {
+        errorMessage = 'Cannot transfer to the same address';
+      } else {
+        errorMessage = err.message || 'Unknown error';
+      }
+      setTransferFromStatus(`Error: ${errorMessage}`);
+      setTimeout(() => setTransferFromStatus(''), 5000);
+    } finally {
+      setIsTransferFromPending(false);
+    }
+  };
+
   const onConnected = (newAddress: string) => {
     setAddress(newAddress);
     setIsConnected(true);
@@ -515,7 +605,7 @@ function Home() {
           A chillingly cool cryptocurrency
         </p>
       </header>
-  
+
       {/* Main Content */}
       <main className="flex-grow frost-container">
         {/* Token Info and Wallet Connect - Side by Side on Medium Screens */}
@@ -538,10 +628,10 @@ function Home() {
               </div>
             </div>
           </div>
-  
+
           {/* Wallet Connect */}
           <div className="frost-card">
-            <WalletConnect 
+            <WalletConnect
               currentAddress={address}
               isConnected={isConnected}
               onConnected={onConnected}
@@ -549,7 +639,7 @@ function Home() {
             />
           </div>
         </div>
-  
+
         {/* Connected Wallet Actions */}
         {isConnected ? (
           <div>
@@ -567,7 +657,7 @@ function Home() {
                 </span>
               </div>
             </div>
-  
+
             {/* User Actions */}
             <div className="frost-card">
               <h3>Manage Tokens</h3>
@@ -608,15 +698,15 @@ function Home() {
                         backgroundColor: transferStatus.includes('Error')
                           ? colors.frostError
                           : transferStatus.includes('successful')
-                          ? colors.frostSuccess
-                          : colors.frostInfo,
+                            ? colors.frostSuccess
+                            : colors.frostInfo,
                       }}
                     >
                       {transferStatus}
                     </div>
                   )}
                 </div>
-  
+
                 {/* Approve Spender */}
                 <div className="space-y-4">
                   <h4>Approve Spender</h4>
@@ -653,15 +743,70 @@ function Home() {
                         backgroundColor: approveStatus.includes('Error')
                           ? colors.frostError
                           : approveStatus.includes('successful')
-                          ? colors.frostSuccess
-                          : colors.frostInfo,
+                            ? colors.frostSuccess
+                            : colors.frostInfo,
                       }}
                     >
                       {approveStatus}
                     </div>
                   )}
                 </div>
-  
+
+                {/* Add to the grid in "Manage Tokens" */}
+                <div className="space-y-4">
+                  <h4>Transfer From (Spend Approved Tokens)</h4>
+                  <div>
+                    <label>Owner Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x... (owner's address)"
+                      value={transferFromFrom}
+                      onChange={(e) => setTransferFromFrom(e.target.value)}
+                      disabled={isTransferFromPending}
+                    />
+                  </div>
+                  <div>
+                    <label>Recipient Address</label>
+                    <input
+                      type="text"
+                      placeholder="0x... (recipient)"
+                      value={transferFromTo}
+                      onChange={(e) => setTransferFromTo(e.target.value)}
+                      disabled={isTransferFromPending}
+                    />
+                  </div>
+                  <div>
+                    <label>Amount</label>
+                    <input
+                      type="number"
+                      placeholder="0.0"
+                      value={transferFromAmount}
+                      onChange={(e) => setTransferFromAmount(e.target.value)}
+                      disabled={isTransferFromPending}
+                    />
+                  </div>
+                  <button
+                    onClick={handleTransferFrom}
+                    disabled={isTransferFromPending}
+                  >
+                    {isTransferFromPending ? 'Processing...' : 'Transfer From'}
+                  </button>
+                  {transferFromStatus && (
+                    <div
+                      className="frost-status"
+                      style={{
+                        backgroundColor: transferFromStatus.includes('Error')
+                          ? colors.frostError
+                          : transferFromStatus.includes('successful')
+                            ? colors.frostSuccess
+                            : colors.frostInfo,
+                      }}
+                    >
+                      {transferFromStatus}
+                    </div>
+                  )}
+                </div>
+
                 {/* Increase Allowance */}
                 <div className="space-y-4">
                   <h4>Increase Allowance</h4>
@@ -698,15 +843,15 @@ function Home() {
                         backgroundColor: increaseStatus.includes('Error')
                           ? colors.frostError
                           : increaseStatus.includes('successful')
-                          ? colors.frostSuccess
-                          : colors.frostInfo,
+                            ? colors.frostSuccess
+                            : colors.frostInfo,
                       }}
                     >
                       {increaseStatus}
                     </div>
                   )}
                 </div>
-  
+
                 {/* Decrease Allowance */}
                 <div className="space-y-4">
                   <h4>Decrease Allowance</h4>
@@ -743,15 +888,15 @@ function Home() {
                         backgroundColor: decreaseStatus.includes('Error')
                           ? colors.frostError
                           : decreaseStatus.includes('successful')
-                          ? colors.frostSuccess
-                          : colors.frostInfo,
+                            ? colors.frostSuccess
+                            : colors.frostInfo,
                       }}
                     >
                       {decreaseStatus}
                     </div>
                   )}
                 </div>
-  
+
                 {/* Burn From */}
                 <div className="space-y-4 lg:col-span-2">
                   <h4>Burn From</h4>
@@ -790,8 +935,8 @@ function Home() {
                         backgroundColor: burnFromStatus.includes('Error')
                           ? colors.frostError
                           : burnFromStatus.includes('successful')
-                          ? colors.frostSuccess
-                          : colors.frostInfo,
+                            ? colors.frostSuccess
+                            : colors.frostInfo,
                       }}
                     >
                       {burnFromStatus}
@@ -800,7 +945,7 @@ function Home() {
                 </div>
               </div>
             </div>
-  
+
             {/* Owner Controls */}
             {isOwner && (
               <div
@@ -820,7 +965,7 @@ function Home() {
           </div>
         )}
       </main>
-  
+
       {/* Footer */}
       <footer className="text-center py-4">
         <p style={{ color: colors.frostText }}>
